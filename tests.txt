@@ -1,11 +1,13 @@
 <breakfast_menu>
 <food>
+<id att=5/>
 <name>
 Belgian Waffles
 </name>
 <price>
 $5.95
 </price>
+<id att=5/>
 <description>
 Two of our famous Belgian Waffles with plenty of real maple syrup
 </description>
