@@ -8,7 +8,7 @@
 #include <stack>
 #include <sstream> 
 #include <chrono> 
-
+#include<vector>
 #include "xml_cutter.h"
 using namespace std::chrono;
 
@@ -17,6 +17,9 @@ using namespace std;
 
 void pp(Node * k, xml_tree tree, int m);
 
+void print_all_children(Node* n, xml_tree tree, ofstream &final,int i);
+string tabs(int i);
+
 int main()
 {
 	string input;
@@ -24,6 +27,8 @@ int main()
 	vector<Node *> nodes;
 	xml_tree tree;
 	stack<int>tags;
+	ofstream final;
+	final.open("FinalOutput.txt");
 	auto start = high_resolution_clock::now();
 	xml_cutter("tests.txt");//function to make each xml tag in seprate line (the function take xml file as an inpput)
 	// start of checking and correcting errors in the xml file
@@ -49,11 +54,12 @@ int main()
 			continue;
 		}
 
+		if (line[line.length() - 2] == '-' && line[line.length() - 1] == '>') continue;
 
 		if (line[0] == '<' && line[1] != '/') //opening tag
 
 		{
-			if (line[1] == '!') { outfile << line << endl; continue; }
+			if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (msh batba3hom khales)
 			s1.push(line);  //by7ot el line kolo
 			outfile << s1.top() << endl; //batba3 el opening tag
 		}
@@ -186,15 +192,76 @@ int main()
 	Node * root = tree.get_root();
 	//pp(root, tree,0);
 	//---------------
-	return 0;
-}
+	//-----SETTING UP THE FORMAT FOR THE FINAL OUTPUT FILE--------------------
 
+	
+	print_all_children(root, tree, final,0);
+     return 0;
+}
+string tabs(int i) {
+	string s = "";
+	for (int j = 0; j <= i; j++) {
+		s += "\t";
+	}
+	if (i == 0) {
+		return "";
+	}
+	return s;
+}
+void print_all_children(Node* n, xml_tree tree, ofstream &final,int i) {
+	//function to print all tags with format 
+	final <<tabs( i) << "<" << tree.get_tag(n) << (tree.get_attributes(n) == "" ? ">" :" "+ tree.get_attributes(n)) << endl;//prints the opening tag
+	
+	if (tree.get_data(n)!="") //prints data if exists
+	{
+		final << tabs(i+1)<< tree.get_data(n) << endl;
+	}
+	
+	vector<Node*>child = tree.get_children(n);//check for children
+	if (child.empty()) {
+		if (tree.get_attributes(n) == "") //if no children exists and there is no attributes ,print closing tag
+		{
+			//closing tags
+			final <<tabs( i)  << "<" << tree.get_tag(n) << "/>" << endl;
+			return;
+		}
+		else {
+			string att=tree.get_attributes(n);
+			if (att[att.length() - 2 ] != '/') {
+				final << tabs(i) << "<" << tree.get_tag(n) << "/>" << endl;
+				return;
+			}
+		}
+		
+	}
+	else {
+		i++;
+		for (int j = 0; j < child.size(); j++) {
+
+			 print_all_children(child[j], tree, final,i);
+		}
+		if (tree.get_attributes(n) == "") {
+			//closing tags for parent nodes
+			final << tabs(i-1) << "<" << tree.get_tag(n) << "/>" << endl;
+			
+		}
+		else {
+			string att = tree.get_attributes(n);
+			if (att.length()>3 && att[att.length() - 2] != '/') {
+				final << tabs(i-1) << "<" << tree.get_tag(n) << "/>" << endl;
+				return;
+			}
+		}
+
+	}
+}
 void pp(Node * k, xml_tree tree,int m ) {
 	//function to print all the tags in the file 
 	for (int i = 0; i < m; i++) {
 		cout << " ";
 	}
 	tree.print(k);
+	cout << tree.get_attributes(k) << endl;
 	m++;
 	vector<Node*> ss = tree.get_children(k);
 	if (tree.get_children(k).size() > 0) {
