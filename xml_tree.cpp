@@ -40,3 +40,6 @@ string xml_tree::get_data(Node * n) {
 void xml_tree::print(Node * n) {
 	cout << n->tag_name<<endl;
 }
+string xml_tree::get_tag(Node* n) {
+	return n->tag_name;
+}

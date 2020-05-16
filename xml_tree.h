@@ -35,5 +35,6 @@ public:
 	string get_attributes(Node * n); // function to get the attributes of a tag
 	string get_data(Node * n);//function to get the data of a tag
 	void print(Node *n);
+	string get_tag(Node* n);
 };
 
