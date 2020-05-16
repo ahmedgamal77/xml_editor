@@ -1,0 +1,3 @@
+﻿  xmlproject.cpp
+D:\handsa\Data structure tasleem\code\XML Format\xml_editor\xmlproject.cpp(161,30): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  xmlproject.vcxproj -> D:\handsa\Data structure tasleem\code\XML Format\xml_editor\x64\Debug\xmlproject.exe
