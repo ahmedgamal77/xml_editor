@@ -48,12 +48,13 @@ int main()
 			outfile << line << endl;
 			continue;
 		}
-
+			
+		if (line [line.length()-2] == '-'  && line [line.length()-1] == '>' ) continue;  
 
 		if (line[0] == '<' && line[1] != '/') //opening tag
 
 		{
-			if (line[1] == '!') { outfile << line << endl; continue; }
+			if (line[1]=='!' || line[1]=='?'  )  continue;  //comment tags (msh batba3hom khales)
 			s1.push(line);  //by7ot el line kolo
 			outfile << s1.top() << endl; //batba3 el opening tag
 		}
