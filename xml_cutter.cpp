@@ -44,7 +44,7 @@ void xml_cutter(string fi)
 					}
 			}
 			line= input.substr(start,(end-start+1));
-			if(line[0]!=' ' && line[1] !=' ')
+			if(line[0]!=' ' || line[1] !=' ')
 				outfile << line<<endl;
 
 
