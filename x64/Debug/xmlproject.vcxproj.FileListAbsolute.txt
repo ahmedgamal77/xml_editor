@@ -1,2 +1,4 @@
 D:\handsa\Data structure tasleem\code\XML Format\xml_editor\x64\Debug\xmlproject.exe
 D:\handsa\Data structure tasleem\code\XML Format\xml_editor\x64\Debug\xmlproject.pdb
+D:\DALIAA\1DALIA\Academic_Projects\xml_editor\x64\Debug\xmlproject.exe
+D:\DALIAA\1DALIA\Academic_Projects\xml_editor\x64\Debug\xmlproject.pdb
