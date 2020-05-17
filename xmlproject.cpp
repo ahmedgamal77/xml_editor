@@ -53,9 +53,12 @@ int main()
 			outfile << line << endl;
 			continue;
 		}
-
-		if (line[line.length() - 2] == '-' && line[line.length() - 1] == '>') continue;
-
+		
+		if (line.length() >= 2) 
+		{
+			if (line[line.length() - 2] == '-' && line[line.length() - 1] == '>') continue;
+		}
+	
 		if (line[0] == '<' && line[1] != '/') //opening tag
 
 		{
