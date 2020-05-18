@@ -14,9 +14,10 @@ using namespace std::chrono;
 
 
 using namespace std;
-
+void HypernymsOfAWord(xml_tree tree, vector<Node*> &NoOFSynsets, string word, string id, vector<string> &Hypernyms);
+string WordDefinition(xml_tree tree, vector<Node*> &NoOFSynsets, string word, string id);
 void pp(Node* k, xml_tree tree, int m);
-
+int SetNumber(xml_tree tree, vector<Node*> &NoOFSynsets);
 void print_all_children(Node* n, xml_tree tree, ofstream & final, int i);
 string tabs(int i);
 
@@ -204,18 +205,74 @@ int main()
 	//-----------QUERIES FROM THE USER----------------------//
 
 
-	vector<Node*>tags_children = tree.get_children(root);
+
 	vector<Node*>NoOFSynsets;
+	
+	//--------1---------looping to get to synsets numbers-----------------------
+	int number=SetNumber(tree,NoOFSynsets);
+
+	if (number != 0) {
+		cout<<"Number of SynSets is : "<<number<<endl;
+	}
+	else {
+		cout<<"No Synsets Available"<<endl;
+	}
+
+
+	//---------2--------------getting word and output its definition ---------------------------------
+	cout<<"input a word to get the definition"<<endl;
+	string word;
+	std::getline(cin, word);
+	
+	string id;
+	cin>>id;
+	
+	string def= WordDefinition(tree,NoOFSynsets, word, id);
+
+	if (def == "") {
+		cout<<"Word does not exist , Please Try Another Word!"<<endl;
+	}
+	else {
+		cout<<"The Definition is : "<<def<<endl;
+	}
+
+	//........3..........................Getting the Hypernyms....................
+
+
+
+	std::cout<<"input a word to get the hypernyms"<<endl;
+	cin.ignore();
+	std::getline(cin, word);
+
+	std::cin>>id;
+	vector<string>Hypernyms;
+	HypernymsOfAWord(tree,NoOFSynsets, word, id, Hypernyms);
+
+		cout<<"The Hypernyms are :"<<endl;
+		for (int i = 0; i < Hypernyms.size(); i++) {
+			cout<<Hypernyms[i]<<endl;
+		}
+
+	return 0;
+}
+
+
+
+
+
+int SetNumber(xml_tree tree,vector<Node*> &NoOFSynsets) {
+	Node* root = tree.get_root();
+	vector<Node*>tags_children = tree.get_children(root);
 	vector<Node*>synsets(0);
-	//looping to get to synsets tag
+
 	if (tags_children.size() == 1 && tree.get_tag(tags_children[0]) == "synsets") {
 		NoOFSynsets = tree.get_children(tags_children[0]);
-		std::cout << "Number Of Synsets is :" << NoOFSynsets.size() << endl;
+		return NoOFSynsets.size();
 	}
 	else if (tree.get_tag(root) == "synsets") {
 
 		NoOFSynsets = tree.get_children(root);
-		std::cout << "Number Of Synsets is :" << NoOFSynsets.size() << endl;
+		return NoOFSynsets.size();
 	}
 	else {
 		for (int i = 0; i < tags_children.size(); i++) {
@@ -235,15 +292,13 @@ int main()
 
 
 		}
-		std::cout << "Number Of Synsets is :" << NoOFSynsets.size() << endl;
+		return NoOFSynsets.size();
 	}
 
-	//getting word and output its definition 
-	string word;
-	std::getline(cin, word);
-	string id;
-	cin>>id;
-	
+}
+
+
+string WordDefinition(xml_tree tree,vector<Node*> &NoOFSynsets,string word,string id) {
 	string def;
 	int flag = 0;
 	for (int i = 0; i < NoOFSynsets.size(); i++) {
@@ -251,7 +306,7 @@ int main()
 		Node* words;
 		for (int j = 0; j < child.size(); j++) {
 			if (tree.get_tag(child[j]) == "word") {
-				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id)!=std::string::npos) {
+				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id) != std::string::npos) {
 					flag = 1;
 					break;
 
@@ -261,7 +316,7 @@ int main()
 		if (flag) {
 			for (int j = 0; j < child.size(); j++) {
 				if (tree.get_tag(child[j]) == "def") {
-					def=tree.get_data(child[j]);
+					def = tree.get_data(child[j]);
 					break;
 				}
 			}
@@ -271,9 +326,105 @@ int main()
 		}
 
 	}
-	std::cout << "Defintion is : " << def << endl;
-	return 0;
+	return def;
+
 }
+
+void HypernymsOfAWord(xml_tree tree,vector<Node*> &NoOFSynsets,string word ,string id, vector<string> &Hypernyms) {
+	vector<string>refs(0);
+	Hypernyms.resize(0);
+	int flag=0;
+	for (int i = 0; i < NoOFSynsets.size(); i++) {
+
+		vector<Node*>child = tree.get_children(NoOFSynsets[i]);
+		//getting the word;
+
+
+		for (int j = 0; j < child.size(); j++) {
+			if (tree.get_tag(child[j]) == "word") {
+				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id) != std::string::npos) {
+					flag = 1;
+					break;
+
+				}
+			}
+		}
+		//getting the hypernyms refs 
+		if (flag) {
+			for (int j = 0; j < child.size(); j++) {
+
+				if (tree.get_data(child[j]) == "Hypernym") {
+
+					string s = tree.get_attributes(child[j]);
+					int i = s.find("n");
+					int fin = s.find(">");
+					s = s.substr(i, fin - i + 1);
+
+					while (s.find("n") != std::string::npos) {
+						int i = s.find("n");
+						int j = s.find(" ");
+						int w = s.find(">");
+						int l;
+						if (j != std::string::npos && (j + 1 != w)) {
+							l = j - i;
+						}
+						else {
+							l = w - i - 1;
+						}
+
+						refs.push_back(s.substr(i, l));
+						s.erase(i, l + 1);
+
+
+					}
+
+
+
+
+
+
+				}
+			}
+
+			break;
+
+		}
+
+	}
+
+	flag = 0;
+	
+	//getting hypernyms
+	for (int i = 0; i < refs.size(); i++) {
+
+		for (int j = 0; j < NoOFSynsets.size(); j++) {
+			string id = tree.get_attributes(NoOFSynsets[j]);
+			if (id.find(refs[i]) != std::string::npos) {
+
+				vector<Node*>child = tree.get_children(NoOFSynsets[j]);
+				Node* words;
+				for (int k = 0; k < child.size(); k++) {
+					if (tree.get_tag(child[k]) == "word") {
+						Hypernyms.push_back(tree.get_data(child[k]));
+
+					}
+				}
+			}
+
+		}
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
 string tabs(int i) {
 	string s = "";
 	for (int j = 1; j <= i; j++) {
