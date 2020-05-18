@@ -14,17 +14,18 @@ using namespace std::chrono;
 
 
 using namespace std;
-
-void pp(Node * k, xml_tree tree, int m);
-
-void print_all_children(Node* n, xml_tree tree, ofstream &final,int i);
+void HypernymsOfAWord(xml_tree tree, vector<Node*> &NoOFSynsets, string word, string id, vector<string> &Hypernyms);
+string WordDefinition(xml_tree tree, vector<Node*> &NoOFSynsets, string word, string id);
+void pp(Node* k, xml_tree tree, int m);
+int SetNumber(xml_tree tree, vector<Node*> &NoOFSynsets);
+void print_all_children(Node* n, xml_tree tree, ofstream & final, int i);
 string tabs(int i);
 
 int main()
 {
 	string input;
 	ifstream inFile;
-	vector<Node *> nodes;
+	vector<Node*> nodes;
 	xml_tree tree;
 	stack<int>tags;
 	ofstream final;
@@ -45,20 +46,18 @@ int main()
 	//std::string line1; getline( infile, line1 ); outfile<<line1;  //awel kam satr abl el tags
 
 
-	for (std::string line; getline(infile, line);)  //line bye line
+	for (std::string line; std::getline(infile, line);)  //line bye line
 	{
 		int data = 0;
-		if (line[0] == '<' &&  line[line.length() - 2] == '/')  //case (self closing tag)
+		if (line[0] == '<' && line[line.length() - 2] == '/')  //case (self closing tag)
 		{
 			outfile << line << endl;
 			continue;
 		}
-		
-		if (line.length() >= 2) 
-		{
+		if (line.length() >= 2) {
 			if (line[line.length() - 2] == '-' && line[line.length() - 1] == '>') continue;
 		}
-	
+
 		if (line[0] == '<' && line[1] != '/') //opening tag
 
 		{
@@ -83,7 +82,7 @@ int main()
 			else
 				outfile << "<" << "/" << line.substr(1) << ">" << endl;
 
-			getline(infile, line);
+			std::getline(infile, line);
 
 		}
 
@@ -126,11 +125,11 @@ int main()
 	//start of implementing the xml tree from the xml file
 	inFile.open("output1.txt");
 	if (!inFile) {
-		cout << "Unable to open file";
+		std::cout << "Unable to open file";
 		exit(1); // terminate with error
 	}
-	
-	while (getline(inFile, input))
+
+	while (std::getline(inFile, input))
 	{
 
 
@@ -140,7 +139,7 @@ int main()
 		}
 		if (input[0] == '<' && input[1] != '/')
 		{
-			
+
 			int index;
 			// Searching for the space to get the tag name only from the line
 			for (int i = 1; i < input.length(); i++)
@@ -162,9 +161,9 @@ int main()
 				tree.add_child(nodes[tags.top()], nodes[nodes.size() - 1]);//add a child to the last opened tag
 			}
 			tags.push(nodes.size() - 1);//add the last opened tag to deal with it to add children or data to it 
-			if(input[input.length()-2]=='/')
+			if (input[input.length() - 2] == '/')
 				tags.pop();//self closing tag 
-			
+
 		}
 		//Closing tag
 		else if (input[0] == '<' && input[1] == '/')
@@ -175,35 +174,260 @@ int main()
 		else
 		{
 			tree.add_data(nodes[tags.top()], input);//add data to the last opened tag
-			
+
 		}
 	}
 
 	//end of impementation the xml tree from the xml file
 
-	
-	
+
+
 	inFile.close();
 	//printing the execution time for the code
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 
-	cout << "Time taken by function: "
+	std::cout << "Time taken by function: "
 		<< duration.count() << " microseconds" << endl;
 	//-----------------------
 	//testing for the tree
-	Node * root = tree.get_root();
+	Node* root = tree.get_root();
 	//pp(root, tree,0);
 	//---------------
 	//-----SETTING UP THE FORMAT FOR THE FINAL OUTPUT FILE--------------------
 
+
+	print_all_children(root, tree, final, 0);
+
+
+
+
+	//-----------QUERIES FROM THE USER----------------------//
+
+
+
+	vector<Node*>NoOFSynsets;
 	
-	print_all_children(root, tree, final,0);
-     return 0;
+	//--------1---------looping to get to synsets numbers-----------------------
+	int number=SetNumber(tree,NoOFSynsets);
+
+	if (number != 0) {
+		cout<<"Number of SynSets is : "<<number<<endl;
+	}
+	else {
+		cout<<"No Synsets Available"<<endl;
+	}
+
+
+	//---------2--------------getting word and output its definition ---------------------------------
+	cout<<"input a word to get the definition"<<endl;
+	string word;
+	std::getline(cin, word);
+	
+	string id;
+	cin>>id;
+	
+	string def= WordDefinition(tree,NoOFSynsets, word, id);
+
+	if (def == "") {
+		cout<<"Word does not exist , Please Try Another Word!"<<endl;
+	}
+	else {
+		cout<<"The Definition is : "<<def<<endl;
+	}
+
+	//........3..........................Getting the Hypernyms....................
+
+
+
+	std::cout<<"input a word to get the hypernyms"<<endl;
+	cin.ignore();
+	std::getline(cin, word);
+
+	std::cin>>id;
+	vector<string>Hypernyms;
+	HypernymsOfAWord(tree,NoOFSynsets, word, id, Hypernyms);
+
+		cout<<"The Hypernyms are :"<<endl;
+		for (int i = 0; i < Hypernyms.size(); i++) {
+			cout<<Hypernyms[i]<<endl;
+		}
+
+	return 0;
 }
+
+
+
+
+
+int SetNumber(xml_tree tree,vector<Node*> &NoOFSynsets) {
+	Node* root = tree.get_root();
+	vector<Node*>tags_children = tree.get_children(root);
+	vector<Node*>synsets(0);
+
+	if (tags_children.size() == 1 && tree.get_tag(tags_children[0]) == "synsets") {
+		NoOFSynsets = tree.get_children(tags_children[0]);
+		return NoOFSynsets.size();
+	}
+	else if (tree.get_tag(root) == "synsets") {
+
+		NoOFSynsets = tree.get_children(root);
+		return NoOFSynsets.size();
+	}
+	else {
+		for (int i = 0; i < tags_children.size(); i++) {
+
+			if (tree.get_tag(tags_children[i]) == "synsets") {
+				synsets.push_back(tags_children[i]);
+
+			}
+		}
+
+
+		for (int i = 0; i < synsets.size(); i++) {
+			vector<Node*>b = tree.get_children(synsets[i]);
+
+			NoOFSynsets.insert(NoOFSynsets.end(), b.begin(), b.end());
+
+
+
+		}
+		return NoOFSynsets.size();
+	}
+
+}
+
+
+string WordDefinition(xml_tree tree,vector<Node*> &NoOFSynsets,string word,string id) {
+	string def;
+	int flag = 0;
+	for (int i = 0; i < NoOFSynsets.size(); i++) {
+		vector<Node*>child = tree.get_children(NoOFSynsets[i]);
+		Node* words;
+		for (int j = 0; j < child.size(); j++) {
+			if (tree.get_tag(child[j]) == "word") {
+				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id) != std::string::npos) {
+					flag = 1;
+					break;
+
+				}
+			}
+		}
+		if (flag) {
+			for (int j = 0; j < child.size(); j++) {
+				if (tree.get_tag(child[j]) == "def") {
+					def = tree.get_data(child[j]);
+					break;
+				}
+			}
+
+			break;
+
+		}
+
+	}
+	return def;
+
+}
+
+void HypernymsOfAWord(xml_tree tree,vector<Node*> &NoOFSynsets,string word ,string id, vector<string> &Hypernyms) {
+	vector<string>refs(0);
+	Hypernyms.resize(0);
+	int flag=0;
+	for (int i = 0; i < NoOFSynsets.size(); i++) {
+
+		vector<Node*>child = tree.get_children(NoOFSynsets[i]);
+		//getting the word;
+
+
+		for (int j = 0; j < child.size(); j++) {
+			if (tree.get_tag(child[j]) == "word") {
+				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id) != std::string::npos) {
+					flag = 1;
+					break;
+
+				}
+			}
+		}
+		//getting the hypernyms refs 
+		if (flag) {
+			for (int j = 0; j < child.size(); j++) {
+
+				if (tree.get_data(child[j]) == "Hypernym") {
+
+					string s = tree.get_attributes(child[j]);
+					int i = s.find("n");
+					int fin = s.find(">");
+					s = s.substr(i, fin - i + 1);
+
+					while (s.find("n") != std::string::npos) {
+						int i = s.find("n");
+						int j = s.find(" ");
+						int w = s.find(">");
+						int l;
+						if (j != std::string::npos && (j + 1 != w)) {
+							l = j - i;
+						}
+						else {
+							l = w - i - 1;
+						}
+
+						refs.push_back(s.substr(i, l));
+						s.erase(i, l + 1);
+
+
+					}
+
+
+
+
+
+
+				}
+			}
+
+			break;
+
+		}
+
+	}
+
+	flag = 0;
+	
+	//getting hypernyms
+	for (int i = 0; i < refs.size(); i++) {
+
+		for (int j = 0; j < NoOFSynsets.size(); j++) {
+			string id = tree.get_attributes(NoOFSynsets[j]);
+			if (id.find(refs[i]) != std::string::npos) {
+
+				vector<Node*>child = tree.get_children(NoOFSynsets[j]);
+				Node* words;
+				for (int k = 0; k < child.size(); k++) {
+					if (tree.get_tag(child[k]) == "word") {
+						Hypernyms.push_back(tree.get_data(child[k]));
+
+					}
+				}
+			}
+
+		}
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
 string tabs(int i) {
 	string s = "";
-	for (int j = 0; j <= i; j++) {
+	for (int j = 1; j <= i; j++) {
 		s += "\t";
 	}
 	if (i == 0) {
@@ -211,66 +435,66 @@ string tabs(int i) {
 	}
 	return s;
 }
-void print_all_children(Node* n, xml_tree tree, ofstream &final,int i) {
+void print_all_children(Node* n, xml_tree tree, ofstream & final, int i) {
 	//function to print all tags with format 
-	final <<tabs( i) << "<" << tree.get_tag(n) << (tree.get_attributes(n) == "" ? ">" :" "+ tree.get_attributes(n)) << endl;//prints the opening tag
-	
-	if (tree.get_data(n)!="") //prints data if exists
+	final << tabs(i) << "<" << tree.get_tag(n) << (tree.get_attributes(n) == "" ? ">" : " " + tree.get_attributes(n)) << endl;//prints the opening tag
+
+	if (tree.get_data(n) != "") //prints data if exists
 	{
-		final << tabs(i+1)<< tree.get_data(n) << endl;
+		final << tabs(i) << tree.get_data(n) << endl;
 	}
-	
+
 	vector<Node*>child = tree.get_children(n);//check for children
 	if (child.empty()) {
 		if (tree.get_attributes(n) == "") //if no children exists and there is no attributes ,print closing tag
 		{
 			//closing tags
-			final <<tabs( i)  << "<" << tree.get_tag(n) << "/>" << endl;
+			final << tabs(i) << "<" << tree.get_tag(n) << "/>" << endl;
 			return;
 		}
 		else {
-			string att=tree.get_attributes(n);
-			if (att[att.length() - 2 ] != '/') {
+			string att = tree.get_attributes(n);
+			if (att[att.length() - 2] != '/') {
 				final << tabs(i) << "<" << tree.get_tag(n) << "/>" << endl;
 				return;
 			}
 		}
-		
+
 	}
 	else {
 		i++;
 		for (int j = 0; j < child.size(); j++) {
 
-			 print_all_children(child[j], tree, final,i);
+			print_all_children(child[j], tree, final, i);
 		}
 		if (tree.get_attributes(n) == "") {
 			//closing tags for parent nodes
-			final << tabs(i-1) << "<" << tree.get_tag(n) << "/>" << endl;
-			
+			final << tabs(i - 1) << "<" << tree.get_tag(n) << "/>" << endl;
+
 		}
 		else {
 			string att = tree.get_attributes(n);
-			if (att.length()>3 && att[att.length() - 2] != '/') {
-				final << tabs(i-1) << "<" << tree.get_tag(n) << "/>" << endl;
+			if (att.length() > 3 && att[att.length() - 2] != '/') {
+				final << tabs(i - 1) << "<" << tree.get_tag(n) << "/>" << endl;
 				return;
 			}
 		}
 
 	}
 }
-void pp(Node * k, xml_tree tree,int m ) {
+void pp(Node* k, xml_tree tree, int m) {
 	//function to print all the tags in the file 
 	for (int i = 0; i < m; i++) {
-		cout << " ";
+		std::cout << " ";
 	}
 	tree.print(k);
-	cout << tree.get_attributes(k) << endl;
+	std::cout << tree.get_attributes(k) << endl;
 	m++;
 	vector<Node*> ss = tree.get_children(k);
 	if (tree.get_children(k).size() > 0) {
-		for (int i = 0; i <ss.size(); i++) {
+		for (int i = 0; i < ss.size(); i++) {
 
-			pp(ss[i], tree ,m);
+			pp(ss[i], tree, m);
 			m++;
 
 		}
