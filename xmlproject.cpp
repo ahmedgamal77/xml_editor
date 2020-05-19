@@ -46,78 +46,88 @@ int main()
 	//std::string line1; getline( infile, line1 ); outfile<<line1;  //awel kam satr abl el tags
 
 
-	for (std::string line; std::getline(infile, line);)  //line bye line
-	{
-		int data = 0;
-		if (line[0] == '<' && line[line.length() - 2] == '/')  //case (self closing tag)
-		{
-			outfile << line << endl;
-			continue;
-		}
-		if (line.length() >= 2) {
-			if (line[line.length() - 2] == '-' && line[line.length() - 1] == '>') continue;
-		}
+	
+       for (std::string line; getline(infile, line);)  //line bye line
+        {
+            int data = 0;
+            if (line[0] == '<' &&  line[line.length() - 2] == '/')  //case (self closing tag)
+            {
+                outfile << line.substr(0,line.length()-2)<<">"<< endl;
+                stringstream str (line);
+                str >> line;
+                outfile << "<" << "/" << line.substr(1) <<">"<<endl;
 
-		if (line[0] == '<' && line[1] != '/') //opening tag
+                continue;
+            }
 
-		{
-			if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (msh batba3hom khales)
-			s1.push(line);  //by7ot el line kolo
-			outfile << s1.top() << endl; //batba3 el opening tag
-		}
-
-
-		else if (line[0] != '<') //data
-		{
-
-			data = 1;
-			outfile << line << endl; //etba3 el data
-
-			//w etba3 b3daha 3ala tool el closing tag
-			stringstream str(s1.top());
-			s1.pop();
-			str >> line;  //3lshan akhod el tag bs mn gher el attributes
-			if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-				outfile << "<" << "/" << line.substr(1) << endl;
-			else
-				outfile << "<" << "/" << line.substr(1) << ">" << endl;
-
-			std::getline(infile, line);
-
-		}
+            if (line.length() >= 2)
+            {
+                if (line[line.length() - 2] == '-' && line[line.length() - 1] == '>') continue;
+            }
 
 
-		else if (line[0] == '<' && line[1] == '/')  //closing tag
-		{
-			if (s1.empty()) continue;  //law el stack kan fadi
-			if (data) { data = 0; continue; } //law kan el satr eli abli data
 
-			stringstream str(s1.top());
-			s1.pop();
-			str >> line;  //3lshan akhod el tag bs mn gher el attributes
-			if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-				outfile << "<" << "/" << line.substr(1) << endl;
-			else
-				outfile << "<" << "/" << line.substr(1) << ">" << endl;
+             if (line[0] != '<') //data
+            {
 
-		}
+                data = 1;
+                outfile << line << endl; //etba3 el data
+
+                //w etba3 b3daha 3ala tool el closing tag
+                stringstream str(s1.top());
+                s1.pop();
+                str >> line;  //3lshan akhod el tag bs mn gher el attributes
+                if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
+                    outfile << "<" << "/" << line.substr(1) << endl;
+                else
+                    outfile << "<" << "/" << line.substr(1) << ">" << endl;
+
+                getline(infile, line);
+
+            }
 
 
-	}
+
+             if (line[0] == '<' && line[1] != '/') //opening tag
+
+             {
+                 if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (msh batba3hom khales)
+                 s1.push(line);  //by7ot el line kolo
+                 outfile << s1.top() << endl; //batba3 el opening tag
+                 continue;
+             }
 
 
-	//law el closing tags khelset w lsa feh opening tags
-	string line;
-	while (!s1.empty())
-	{
-		stringstream str(s1.top());
-		s1.pop();
-		str >> line;  //3lshan akhod el tag bs mn gher el attributes
-		if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-			outfile << "<" << "/" << line.substr(1) << endl;
-		else
-			outfile << "<" << "/" << line.substr(1) << ">" << endl;
-	}
+             if (line[0] == '<' && line[1] == '/')  //closing tag
+            {
+                if (s1.empty()) continue;  //law el stack kan fadi
+                if (data) { data = 0; continue; } //law kan el satr eli abli data
+
+                stringstream str(s1.top());
+                s1.pop();
+                str >> line;  //3lshan akhod el tag bs mn gher el attributes
+                if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
+                    outfile << "<" << "/" << line.substr(1) << endl;
+                else
+                    outfile << "<" << "/" << line.substr(1) << ">" << endl;
+
+            }
+
+
+        }
+
+        //law el closing tags khelset w lsa feh opening tags
+        string line;
+        while (!s1.empty())
+        {
+            stringstream str(s1.top());
+            s1.pop();
+            str >> line;  //3lshan akhod el tag bs mn gher el attributes
+            if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
+                outfile << "<" << "/" << line.substr(1) << endl;
+            else
+                outfile << "<" << "/" << line.substr(1) << ">" << endl;
+        }
 
 
 
