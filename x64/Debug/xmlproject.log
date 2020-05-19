@@ -1,0 +1,14 @@
+﻿  xmlproject.cpp
+d:\downloads\new folder\xml_editor\xmlproject.cpp(170): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(277): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(282): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(302): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(313): warning C4101: 'words': unreferenced local variable
+d:\downloads\new folder\xml_editor\xmlproject.cpp(366): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(367): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(371): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(372): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(373): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\downloads\new folder\xml_editor\xmlproject.cpp(412): warning C4101: 'words': unreferenced local variable
+d:\downloads\new folder\xml_editor\xmlproject.cpp(518): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  xmlproject.vcxproj -> D:\downloads\New folder\xml_editor\x64\Debug\xmlproject.exe
