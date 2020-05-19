@@ -168,7 +168,8 @@ int main()
 				tree.add_child(nodes[tags.top()], nodes[nodes.size() - 1]);//add a child to the last opened tag
 			}
 			tags.push(nodes.size() - 1);//add the last opened tag to deal with it to add children or data to it 
-
+			if (input[input.length() - 2] == '/')
+				tags.pop();//self closing tag 
 		}
 		//Closing tag
 		else if (input[0] == '<' && input[1] == '/')
