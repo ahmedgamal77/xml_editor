@@ -55,7 +55,7 @@ int main()
 
 
 	//for (int i=0 ; i<3 ; i++) {std::string line1; getline( infile, line1 ); outfile<<line1<<endl;}
-	//std::string line1; getline( infile, line1 ); outfile<<line1;  //awel kam satr abl el tags
+	//std::string line1; getline( infile, line1 ); outfile<<line1;  
 
 
 	
@@ -82,13 +82,13 @@ int main()
             {
 
                 data = 1;
-                outfile << line << endl; //etba3 el data
+                outfile << line << endl; //print the data
 
-                //w etba3 b3daha 3ala tool el closing tag
+                //print its closing tag
                 stringstream str(s1.top());
                 s1.pop();
-                str >> line;  //3lshan akhod el tag bs mn gher el attributes
-                if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
+                str >> line;  //to take the tag without its attributes
+                if (line[line.length() - 1] == '>')  //check if the last char is ">"
                 {
                    outfile << "<" << "/" << line.substr(1) << endl;
                     error =  char1 + char2 + line.substr(1) ;
@@ -110,9 +110,9 @@ int main()
 
              {
                  if (data==1) num_of_errors++;
-                 if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (msh batba3hom khales)
-                 s1.push(line);  //by7ot el line kolo
-                 outfile << s1.top() << endl; //batba3 el opening tag
+                 if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (ignore them)
+                 s1.push(line);  //we push the hole line
+                 outfile << s1.top() << endl; //print opening tag
                  continue;
              }
 
@@ -120,13 +120,13 @@ int main()
              if (line[0] == '<' && line[1] == '/')  //closing tag
             {
 
-                if (s1.empty()) continue;  //law el stack kan fadi
-                if (data) { data = 0; if (error != line ) num_of_errors++ ;continue; } //law kan el satr eli abli data
+                if (s1.empty()) continue;  //if the stack was empty
+                if (data) { data = 0; if (error != line ) num_of_errors++ ;continue; } //if the previous line was a data
 
                 stringstream str(s1.top());
                 s1.pop();
-                str >> line;  //3lshan akhod el tag bs mn gher el attributes
-                if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
+                str >> line;  //to take the tag without its attributes
+                if (line[line.length() - 1] == '>')  //check if the last char is ">"
                 {
                      outfile << "<" << "/" << line.substr(1) << endl;
                      error =  char1 + char2 + line.substr(1) ;
@@ -145,14 +145,14 @@ int main()
 
         }
 
-        //law el closing tags khelset w lsa feh opening tags
+        //if there are no more closing tags but the stack is note empty (remaining opening tags)
         string line;
         while (!s1.empty())
         {
             stringstream str(s1.top());
             s1.pop();
-            str >> line;  //3lshan akhod el tag bs mn gher el attributes
-            if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
+            str >> line; //to take the tag without its attributes
+            if (line[line.length() - 1] == '>')  //check if the last char is ">"
                  outfile << "<" << "/" << line.substr(1) << endl;
 
             else
