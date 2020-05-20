@@ -40,6 +40,12 @@ int main()
 
 
 	stack <string> s1;
+	
+	int num_of_errors=0;
+	string error ;
+        string char1 = "<";  string char2 = "/";  string char3 = ">";
+
+	
 
 
 	//for (int i=0 ; i<3 ; i++) {std::string line1; getline( infile, line1 ); outfile<<line1<<endl;}
@@ -47,7 +53,7 @@ int main()
 
 
 	
-       for (std::string line; getline(infile, line);)  //line bye line
+        for (std::string line; getline(infile, line);)  //line bye line
         {
             int data = 0;
             if (line[0] == '<' &&  line[line.length() - 2] == '/')  //case (self closing tag)
@@ -56,7 +62,6 @@ int main()
                 stringstream str (line);
                 str >> line;
                 outfile << "<" << "/" << line.substr(1) <<">"<<endl;
-
                 continue;
             }
 
@@ -78,9 +83,16 @@ int main()
                 s1.pop();
                 str >> line;  //3lshan akhod el tag bs mn gher el attributes
                 if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-                    outfile << "<" << "/" << line.substr(1) << endl;
+                {
+                   outfile << "<" << "/" << line.substr(1) << endl;
+                    error =  char1 + char2 + line.substr(1) ;
+                }
                 else
+                {
                     outfile << "<" << "/" << line.substr(1) << ">" << endl;
+                    error = char1 + char2 + line.substr(1) + char3 ;
+                }
+
 
                 getline(infile, line);
 
@@ -91,6 +103,7 @@ int main()
              if (line[0] == '<' && line[1] != '/') //opening tag
 
              {
+                 if (data==1) num_of_errors++;
                  if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (msh batba3hom khales)
                  s1.push(line);  //by7ot el line kolo
                  outfile << s1.top() << endl; //batba3 el opening tag
@@ -100,16 +113,26 @@ int main()
 
              if (line[0] == '<' && line[1] == '/')  //closing tag
             {
+
                 if (s1.empty()) continue;  //law el stack kan fadi
-                if (data) { data = 0; continue; } //law kan el satr eli abli data
+                if (data) { data = 0; if (error != line ) num_of_errors++ ;continue; } //law kan el satr eli abli data
 
                 stringstream str(s1.top());
                 s1.pop();
                 str >> line;  //3lshan akhod el tag bs mn gher el attributes
                 if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-                    outfile << "<" << "/" << line.substr(1) << endl;
+                {
+                     outfile << "<" << "/" << line.substr(1) << endl;
+                     error =  char1 + char2 + line.substr(1) ;
+                }
+
                 else
-                    outfile << "<" << "/" << line.substr(1) << ">" << endl;
+                {
+                     outfile << "<" << "/" << line.substr(1) << ">" << endl;
+                     error =  char1 + char2 + line.substr(1) + char3;
+                }
+
+                //if (error != line ) cout <<"error";
 
             }
 
@@ -124,9 +147,12 @@ int main()
             s1.pop();
             str >> line;  //3lshan akhod el tag bs mn gher el attributes
             if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-                outfile << "<" << "/" << line.substr(1) << endl;
+                 outfile << "<" << "/" << line.substr(1) << endl;
+
             else
                 outfile << "<" << "/" << line.substr(1) << ">" << endl;
+
+            num_of_errors ++;
         }
 
 
