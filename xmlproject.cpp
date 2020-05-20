@@ -46,6 +46,12 @@ int main()
 
 
 	stack <string> s1;
+	
+	int num_of_errors=0;
+	string error ;
+        string char1 = "<";  string char2 = "/";  string char3 = ">";
+
+	
 
 
 	//for (int i=0 ; i<3 ; i++) {std::string line1; getline( infile, line1 ); outfile<<line1<<endl;}
@@ -53,7 +59,7 @@ int main()
 
 
 	
-       for (std::string line; getline(infile, line);)  //line bye line
+        for (std::string line; getline(infile, line);)  //line bye line
         {
             int data = 0;
             if (line[0] == '<' &&  line[line.length() - 2] == '/')  //case (self closing tag)
@@ -62,7 +68,6 @@ int main()
                 stringstream str (line);
                 str >> line;
                 outfile << "<" << "/" << line.substr(1) <<">"<<endl;
-
                 continue;
             }
 
@@ -84,9 +89,16 @@ int main()
                 s1.pop();
                 str >> line;  //3lshan akhod el tag bs mn gher el attributes
                 if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-                    outfile << "<" << "/" << line.substr(1) << endl;
+                {
+                   outfile << "<" << "/" << line.substr(1) << endl;
+                    error =  char1 + char2 + line.substr(1) ;
+                }
                 else
+                {
                     outfile << "<" << "/" << line.substr(1) << ">" << endl;
+                    error = char1 + char2 + line.substr(1) + char3 ;
+                }
+
 
                 getline(infile, line);
 
@@ -97,6 +109,7 @@ int main()
              if (line[0] == '<' && line[1] != '/') //opening tag
 
              {
+                 if (data==1) num_of_errors++;
                  if (line[1] == '!' || line[1] == '?')  continue;  //comment tags (msh batba3hom khales)
                  s1.push(line);  //by7ot el line kolo
                  outfile << s1.top() << endl; //batba3 el opening tag
@@ -106,16 +119,26 @@ int main()
 
              if (line[0] == '<' && line[1] == '/')  //closing tag
             {
+
                 if (s1.empty()) continue;  //law el stack kan fadi
-                if (data) { data = 0; continue; } //law kan el satr eli abli data
+                if (data) { data = 0; if (error != line ) num_of_errors++ ;continue; } //law kan el satr eli abli data
 
                 stringstream str(s1.top());
                 s1.pop();
                 str >> line;  //3lshan akhod el tag bs mn gher el attributes
                 if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-                    outfile << "<" << "/" << line.substr(1) << endl;
+                {
+                     outfile << "<" << "/" << line.substr(1) << endl;
+                     error =  char1 + char2 + line.substr(1) ;
+                }
+
                 else
-                    outfile << "<" << "/" << line.substr(1) << ">" << endl;
+                {
+                     outfile << "<" << "/" << line.substr(1) << ">" << endl;
+                     error =  char1 + char2 + line.substr(1) + char3;
+                }
+
+                //if (error != line ) cout <<"error";
 
             }
 
@@ -130,9 +153,12 @@ int main()
             s1.pop();
             str >> line;  //3lshan akhod el tag bs mn gher el attributes
             if (line[line.length() - 1] == '>')  //bt-check akher char howa ">" wla la
-                outfile << "<" << "/" << line.substr(1) << endl;
+                 outfile << "<" << "/" << line.substr(1) << endl;
+
             else
                 outfile << "<" << "/" << line.substr(1) << ">" << endl;
+
+            num_of_errors ++;
         }
 
 
@@ -316,7 +342,7 @@ int SetNumber(xml_tree tree,vector<Node*> &NoOFSynsets) {
 }
 
 
-string WordDefinition(xml_tree tree,vector<Node*> &NoOFSynsets,string word,string id) {
+string WordDefinition(xml_tree tree,vector<Node*> &NoOFSynsets,string word) {
 	string def;
 	int flag = 0;
 	for (int i = 0; i < NoOFSynsets.size(); i++) {
@@ -324,7 +350,7 @@ string WordDefinition(xml_tree tree,vector<Node*> &NoOFSynsets,string word,strin
 		Node* words;
 		for (int j = 0; j < child.size(); j++) {
 			if (tree.get_tag(child[j]) == "word") {
-				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id) != std::string::npos) {
+				if (tree.get_data(child[j]) == word ) {
 					flag = 1;
 					break;
 
@@ -348,7 +374,7 @@ string WordDefinition(xml_tree tree,vector<Node*> &NoOFSynsets,string word,strin
 
 }
 
-void HypernymsOfAWord(xml_tree tree,vector<Node*> &NoOFSynsets,string word ,string id, vector<string> &Hypernyms) {
+void HypernymsOfAWord(xml_tree tree,vector<Node*> &NoOFSynsets,string word , vector<string> &Hypernyms) {
 	vector<string>refs(0);
 	Hypernyms.resize(0);
 	int flag=0;
@@ -360,7 +386,7 @@ void HypernymsOfAWord(xml_tree tree,vector<Node*> &NoOFSynsets,string word ,stri
 
 		for (int j = 0; j < child.size(); j++) {
 			if (tree.get_tag(child[j]) == "word") {
-				if (tree.get_data(child[j]) == word && tree.get_attributes(child[j]).find(id) != std::string::npos) {
+				if (tree.get_data(child[j]) == word ) {
 					flag = 1;
 					break;
 
@@ -455,7 +481,7 @@ string tabs(int i) {
 }
 void print_all_children(Node* n, xml_tree tree, ofstream & final, int i) {
 	//function to print all tags with format 
-	final << tabs(i) << "<" << tree.get_tag(n) << (tree.get_attributes(n) == "" ? ">" : " " + tree.get_attributes(n)) << endl;//prints the opening tag
+	final << tabs(i) << "<" << tree.get_tag(n) << (tree.get_attributes(n) == "" ? ">" : " " + tree.get_attributes(n)+">") << endl;//prints the opening tag
 
 	if (tree.get_data(n) != "") //prints data if exists
 	{
@@ -467,13 +493,13 @@ void print_all_children(Node* n, xml_tree tree, ofstream & final, int i) {
 		if (tree.get_attributes(n) == "") //if no children exists and there is no attributes ,print closing tag
 		{
 			//closing tags
-			final << tabs(i) << "<" << tree.get_tag(n) << "/>" << endl;
+			final << tabs(i) << "</" << tree.get_tag(n) << ">" << endl;
 			return;
 		}
 		else {
 			string att = tree.get_attributes(n);
 			if (att[att.length() - 2] != '/') {
-				final << tabs(i) << "<" << tree.get_tag(n) << "/>" << endl;
+				final << tabs(i) << "</" << tree.get_tag(n) << ">" << endl;
 				return;
 			}
 		}
@@ -487,13 +513,13 @@ void print_all_children(Node* n, xml_tree tree, ofstream & final, int i) {
 		}
 		if (tree.get_attributes(n) == "") {
 			//closing tags for parent nodes
-			final << tabs(i - 1) << "<" << tree.get_tag(n) << "/>" << endl;
+			final << tabs(i - 1) << "</" << tree.get_tag(n) << ">" << endl;
 
 		}
 		else {
 			string att = tree.get_attributes(n);
 			if (att.length() > 3 && att[att.length() - 2] != '/') {
-				final << tabs(i - 1) << "<" << tree.get_tag(n) << "/>" << endl;
+				final << tabs(i - 1) << "</" << tree.get_tag(n) << ">" << endl;
 				return;
 			}
 		}
