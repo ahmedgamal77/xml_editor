@@ -19,8 +19,12 @@ string WordDefinition(xml_tree tree, vector<Node*> &NoOFSynsets, string word, st
 void pp(Node* k, xml_tree tree, int m);
 int SetNumber(xml_tree tree, vector<Node*> &NoOFSynsets);
 void print_all_children(Node* n, xml_tree tree, ofstream & final, int i);
+vector <string> att_cutter(string input);
+vector<int> sort_children(vector<Node *> &children);
+void print_node(Node* node_ptr, int &tab, int repeat);
+void xml_to_json(xml_tree tree);
 string tabs(int i);
-
+ofstream json;
 int main()
 {
 	string input;
@@ -37,6 +41,8 @@ int main()
 	infile.open("output.txt");
 	ofstream outfile;
 	outfile.open("output1.txt");
+
+	
 
 
 	stack <string> s1;
@@ -159,13 +165,14 @@ int main()
 
 	//end of checking and correcting errors
 	//start of implementing the xml tree from the xml file
+	
 	inFile.open("output1.txt");
 	if (!inFile) {
-		std::cout << "Unable to open file";
+		cout << "Unable to open file";
 		exit(1); // terminate with error
 	}
 
-	while (std::getline(inFile, input))
+	while (getline(inFile, input))
 	{
 
 
@@ -188,7 +195,7 @@ int main()
 				}
 			}
 			string tag = input.substr(1, index - 1);
-			string att = input.substr(index + 1);
+			string att = input.substr(index + 1, (input.size() - index - 2));
 			nodes.push_back(tree.add_node(tag, att));//decalre a new tag 
 			if (tags.size() == 0) {
 				tree.add_root(nodes[nodes.size() - 1]);//add thre root to the tree
@@ -199,7 +206,6 @@ int main()
 			tags.push(nodes.size() - 1);//add the last opened tag to deal with it to add children or data to it 
 			if (input[input.length() - 2] == '/')
 				tags.pop();//self closing tag 
-
 		}
 		//Closing tag
 		else if (input[0] == '<' && input[1] == '/')
@@ -214,11 +220,13 @@ int main()
 		}
 	}
 
+
 	//end of impementation the xml tree from the xml file
 
 
 
 	inFile.close();
+	xml_to_json(tree);
 	//printing the execution time for the code
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
@@ -536,3 +544,210 @@ void pp(Node* k, xml_tree tree, int m) {
 		}
 	}
 }
+vector <string> att_cutter(string input) {
+	string att;
+	int start, end, temp;
+	vector<string> output;
+	start = 0;
+	string c = "\"";
+	string c1 = ":";
+	int counter = 0;
+	int size = input.size();
+	for (int i = 0; i < size; i++) {
+		if ((input[i] == '\"') || (i == input.size() - 1)) {
+			counter++;
+			if (counter == 2)
+			{
+				end = i + 1;
+				att = input.substr(start, end - start + 1);
+				for (int j = 0; j < att.size(); j++) {
+					if (att[j] == '=')
+						temp = j + 1;
+				}
+				att.insert(0, c);
+				att.insert(temp, c);
+				att.replace(temp + 1, 1, c1);
+				if (att[att.length() - 1] == '/')
+					att.erase(att.length() - 1);
+				output.push_back(att);
+				start = i + 1;
+				counter = 0;
+			}
+		}
+
+
+	}
+
+	return output;
+
+}
+
+vector<int> sort_children(vector<Node *> &children) {
+	vector<int> repeat;
+	string temp;
+	Node * temp_ptr;
+	for (int i = 0; i < children.size(); i++)
+		for (int j = i + 1; j < children.size(); j++) {
+			if ((children[j]->tag_name) < (children[i]->tag_name))
+			{
+				temp_ptr = children[j];
+				children[j] = children[i];
+				children[i] = temp_ptr;
+			}
+		}
+
+	if (children.size() > 0) {
+		temp = children[0]->tag_name;
+		repeat.push_back(1);
+		int j = 0;
+		for (int i = 1; i < children.size(); i++) {
+			if ((children[i]->tag_name) == temp) {
+				repeat[j]++;
+			}
+			else
+			{
+				repeat.push_back(1);
+				j++;
+				temp = children[i]->tag_name;
+			}
+		}
+
+	}
+	return repeat;
+
+}
+
+void print_node(Node* node_ptr, int &tab, int repeat, int repeat_max) {
+	if (node_ptr->children.size()) {
+		for (int i = 0; i < tab; i++) {
+			json << "\t";
+		}
+		if (repeat > 0) {
+
+			json << ",{" << endl;
+
+		}
+		else if (repeat == 0) {
+
+			json << "\"" << node_ptr->tag_name << "\":[" << endl;
+			tab++;
+			for (int i = 0; i < tab; i++) {
+				json << "\t";
+			}
+			json << "{" << endl;
+			tab++;
+
+		}
+		else if (repeat == -1) {
+
+			json << "\"" << node_ptr->tag_name << "\":{" << endl;
+			tab++;
+		}
+
+		vector<int> repeat = sort_children(node_ptr->children);
+		int j = 0;
+		for (int k = 0; k < repeat.size(); k++) {
+			if (repeat[k] > 1)
+			{
+
+				for (int i = 0; i < repeat[k]; i++) {
+					print_node(node_ptr->children[j], tab, i, repeat[k]);
+					tab--;
+					j++;
+				}
+				for (int i = 0; i < tab; i++) {
+					json << "\t";
+				}
+				json << "]";
+
+			}
+			else {
+				print_node(node_ptr->children[j], tab, -1, 1);
+				tab--;
+				j++;
+			}
+			if (k != repeat.size() - 1 || node_ptr->att.size())
+				json << "," << endl;
+			else
+				json << endl;
+		}
+		if (!node_ptr->att.size())
+			json << "}" << endl;
+		/*else
+			json<<*/
+
+	}if (node_ptr->att.size() || node_ptr->data.size()) {
+		if (!node_ptr->children.size()) {
+			for (int i = 0; i < tab; i++) {
+				json << "\t";
+			}
+
+			if (repeat == 0) {
+
+				json << "\"" << node_ptr->tag_name << "\":[" << endl;
+				tab++;
+
+			}
+			else if (repeat == -1) {
+
+				json << "\"" << node_ptr->tag_name << "\":";
+			}
+		}
+		if (node_ptr->att.size()) {
+			vector<string> attributes = att_cutter(node_ptr->att);
+			for (int i = 0; i < attributes.size(); i++) {
+				if (i != 0)
+					for (int i = 0; i < tab; i++) {
+						json << "\t";
+					}
+				else {
+					if (!node_ptr->children.size())
+						json << "{" << endl;
+				}
+				json << attributes[i];
+				if (i != attributes.size() - 1)
+					json << "," << endl;
+			}
+			if (node_ptr->data.size())
+				json << "," << endl;
+			else
+				json << endl;
+			if (!node_ptr->data.size())
+				json << "}" << endl;
+		}if (node_ptr->data.size()) {
+			if (repeat == 0 || node_ptr->att.size())
+				for (int i = 0; i < tab; i++) {
+					json << "\t";
+				}
+			if (node_ptr->att.size()) {
+
+				json << "\"text\":" << "\"" << node_ptr->data << "\"";
+				json << "}" << endl;
+			}
+			else {
+				json << "\"" << node_ptr->data << "\"";
+			}
+			if (repeat >= 0 && repeat != repeat_max - 1)
+				json << "," << endl;
+			else if (repeat == repeat_max - 1)
+				json << endl;
+		}
+
+
+	}
+
+}
+
+void xml_to_json(xml_tree tree) {
+
+	json.open("json.txt");
+	int tab = 1;
+	json << "{" << endl;
+	print_node(tree.get_root(), tab, -1, 1);
+	json << "}" << endl;
+
+	json.close();
+
+
+}
+
